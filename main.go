@@ -16,19 +16,6 @@ type KeyValue struct {
 	Value string
 }
 
-var rimStr = []KeyValue{
-	{Key: "1", Value: "I"},
-	{Key: "2", Value: "II"},
-	{Key: "3", Value: "III"},
-	{Key: "4", Value: "IV"},
-	{Key: "5", Value: "V"},
-	{Key: "6", Value: "VI"},
-	{Key: "7", Value: "VII"},
-	{Key: "8", Value: "VIII"},
-	{Key: "9", Value: "IX"},
-	{Key: "10", Value: "X"},
-}
-
 var resultArab = true
 
 func main() {
