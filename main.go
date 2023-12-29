@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"unicode"
@@ -124,16 +125,15 @@ func parseInt(str string) error {
 func parseRim(str string) (string, error) {
 	err := errors.New("Error")
 	str = strings.ToUpper(str)
-	for _, kv := range rimStr {
-		if kv.Value == str {
-			return kv.Key, nil
-		}
+	romanPattern := regexp.MustCompile(`^M{0,3}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})$`)
+	if romanPattern.MatchString(str) {
+		arabicNumber, err := romanToArabic(str)
+		return arabicNumber, err
 	}
 	return "0", err
 }
 
 func operation(array []string) string {
-	//result, err := "0", error(nil)
 	result, err := operationArab(array)
 
 	if err != nil {
@@ -144,7 +144,7 @@ func operation(array []string) string {
 	if resultArab {
 		return result
 	} else {
-		resultRim, err := parseArabToRim(result)
+		resultRim, err := arabicToRoman(result)
 		if err != nil {
 			fmt.Println("Ошибка", err)
 		}
@@ -201,21 +201,71 @@ func checkRimStr(arrayStr []string) ([]string, bool) {
 	return arrayStr, false
 }
 
-func parseArabToRim(str string) (string, error) {
+func showFinish(str string) {
+	fmt.Println("Результат: ", str)
+}
 
-	value, _ := strconv.Atoi(str)
-	if 0 > value {
-		return "0", errors.New("В римском нет отрицательных чисел")
+func romanToArabic(s string) (string, error) {
+	romanNumerals := map[string]int{
+		"I": 1,
+		"V": 5,
+		"X": 10,
+		"L": 50,
+		"C": 100,
+		"D": 500,
+		"M": 1000,
 	}
-	for _, kv := range rimStr {
-		if kv.Key == str {
-			return kv.Value, error(nil)
+
+	var result int
+	previousValue := 0
+
+	for _, char := range strings.Split(s, "") {
+		value, found := romanNumerals[char]
+		if !found {
+			return "", fmt.Errorf("некорректный символ римского числа: %s", char)
+		}
+
+		result += value
+		if previousValue < value {
+			result -= 2 * previousValue
+		}
+
+		previousValue = value
+	}
+
+	return fmt.Sprintf("%d", result), nil
+}
+
+func arabicToRoman(s string) (string, error) {
+	err := errors.New("Аргумент должен быть в диапазоне от 1 до 3999")
+	num, err := strconv.Atoi(s)
+	if num <= 0 || num > 3999 {
+		return "", err
+	}
+
+	romanNumerals := map[int]string{
+		1000: "M",
+		900:  "CM",
+		500:  "D",
+		400:  "CD",
+		100:  "C",
+		90:   "XC",
+		50:   "L",
+		40:   "XL",
+		10:   "X",
+		9:    "IX",
+		5:    "V",
+		4:    "IV",
+		1:    "I",
+	}
+
+	result := ""
+	for _, value := range []int{1000, 900, 500, 400, 100, 90, 50, 40, 10, 9, 5, 4, 1} {
+		for num >= value {
+			result += romanNumerals[value]
+			num -= value
 		}
 	}
 
-	return str + " : Программа выводит числа в римском формате только до X(10)", error(nil)
-}
-
-func showFinish(str string) {
-	fmt.Println("Результат: ", str)
+	return result, nil
 }
